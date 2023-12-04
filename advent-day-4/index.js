@@ -12,16 +12,20 @@ const cards = lines.map(l => {
     return {
       "have": numberStringToArray(have),
       "winners": numberStringToArray(winners),
-      "points": 0
+      "copies": 1
     };
 });
 
-cards.forEach(c => {
+cards.forEach((c,i) => {
+  let cardsToCopy = 0;
   c.have.forEach(h => {
     if (c.winners.includes(h)) {
-      c.points = c.points ? c.points * 2 : 1;
+      cardsToCopy++;
     }
-  });
+  })
+  for(let j = 0; j < cardsToCopy; j++) {
+    cards[i + j + 1].copies += c.copies;
+  }
 });
 
-console.log(cards.reduce((acc, c) => acc + c.points, 0));
+console.log(cards.reduce((acc, c) => acc + c.copies, 0));
