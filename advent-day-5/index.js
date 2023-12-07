@@ -6,27 +6,15 @@ const input = fs.readFileSync('input', 'utf-8')
 
 const seedArray = input[0].split(': ')[1].split(' ');
 
-const seeds = [];
+const seedRanges = [];
 
 for (let i = 0; i < seedArray.length; i+=2) {
   const rangeStart = Number(seedArray[i]);
-  const rangeLength = Number(seedArray[i+1]);
-  for (let j = rangeStart; j < rangeStart + rangeLength; j++) {
-    seeds.push({
-      seedId: j,
-      location: j
-    })
-  }
+  const rangeEnd = Number(seedArray[i+1]) + rangeStart - 1;
+  seedRanges.push([rangeStart, rangeEnd]);
 }
 
-// .map(n => {
-//   return {
-//     'seedId': Number(n),
-//     'location': Number(n)
-//   }
-//})
-
-const maps = [] // {name, [{destinationRangeStart, sourceRangeStart, rangeLength}]}
+const maps = []
 let currentMap = null;
 for (let i = 1; i < input.length; i++) {
   if(input[i].match(/[a-zA-Z]/)){
@@ -39,29 +27,36 @@ for (let i = 1; i < input.length; i++) {
     const [destinationRangeStart, sourceRangeStart, rangeLength] = input[i].split(
         ' ').map(Number)
     currentMap.ranges.push({
-      destinationRangeStart,
       sourceRangeStart,
-      rangeLength
+      "sourceRangeEnd": sourceRangeStart + rangeLength,
+      "rangeModifier": destinationRangeStart - sourceRangeStart
     })
   }
 }
 maps.push(currentMap);
 
-maps.forEach(m => {
-  seeds.forEach(s => {
-    const applicableRange = m.ranges.find(r => s.location >= r.sourceRangeStart && s.location < r.sourceRangeStart + r.rangeLength);
+function applyMaps(seedLocation){
+  let finalLocation = seedLocation;
+  maps.forEach(m => {
+    const applicableRange = m.ranges.find(r => r.sourceRangeStart <= finalLocation && r.sourceRangeEnd >= finalLocation);
     if(applicableRange){
-      s.location += applicableRange.destinationRangeStart - applicableRange.sourceRangeStart;
+      finalLocation += applicableRange.rangeModifier;
     }
   })
+  return finalLocation;
+}
 
-  // seeds.filter(s => s.location >= m.sourceRangeStart && s.location < m.sourceRangeStart + m.rangeLength)
-  //   .forEach(s => {
-  //     console.log(s.location, m.sourceRangeStart, m.destinationRangeStart, m.destinationRangeStart - m.sourceRangeStart, s.location + m.destinationRangeStart - m.sourceRangeStart);
-  //     s.location += m.destinationRangeStart - m.sourceRangeStart;
-  // });
-})
+//Find the lowest final seed location
+const minLocation = seedRanges.reduce((globalMinLocation, currentSeedRange) =>{
+  let localMinLocation = Number.MAX_VALUE;
+  for(let i = currentSeedRange[0]; i < currentSeedRange[1]; i++){
+    const finalLocation = applyMaps(i);
+    if(finalLocation < localMinLocation){
+      localMinLocation = finalLocation;
+    }
+  }
+  return globalMinLocation < localMinLocation ? globalMinLocation : localMinLocation;
+}, Number.MAX_VALUE);
 
-console.log(seeds.reduce((minLocationSeed, currentSeed) => {
-  return minLocationSeed.location < currentSeed.location? minLocationSeed : currentSeed;
-}))
+
+console.log(minLocation)
