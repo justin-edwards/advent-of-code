@@ -4,7 +4,7 @@ const lines = fs.readFileSync('input', 'utf-8').split(/[\r\n]+/g);
 
 const readings = lines.map(l => l.split(' ').map(Number));
 
-function getNextValue(sequence){
+function getPreviousValue(sequence){
   console.log(sequence);
   // Base case
   if(sequence.every(v => v === sequence[0])){
@@ -15,13 +15,12 @@ function getNextValue(sequence){
   for(let i = 0; i < sequence.length - 1; i++){
     differenceSequence.push(sequence[i + 1] - sequence[i]);
   }
-  let nextDigit = sequence[sequence.length - 1] + getNextValue(differenceSequence);
-  console.log(nextDigit);
-  return nextDigit;
+  return sequence[0] - getPreviousValue(differenceSequence);
 }
 
+
 const sumOfExtrapolatedValues = readings.reduce((acc, reading) => {
-  const nextValue = getNextValue(reading);
+  const nextValue = getPreviousValue(reading);
   return acc + nextValue;
 }, 0)
 
